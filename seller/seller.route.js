@@ -1,6 +1,7 @@
 import express from "express";
 const router = express.Router();
 import Seller from "./seller.model.js";
+import mongoose from "mongoose";
 // add seller=====================
 router.post("/seller/add", async (req, res) => {
   // extract new seller from req.body
@@ -36,8 +37,59 @@ router.get("/seller/pegination/list", async (req, res) => {
   ]);
   return res.status(200).send({ message: "seccess", sellerList: sellerList });
 });
-// // find seller by id or email
-// router.get("/seller/:id",async(req,res)=>{
-// new sellerId= req.body.id
-// })
+// find seller by id or email
+router.get("/seller/detail/:id", async (req, res) => {
+  const sellerId = req.params.id;
+  const isValidId = mongoose.isValidObjectId(sellerId);
+  if (!isValidId) {
+    return res.status(404).send({ message: "invalid mongoose id" });
+  }
+  const requiredSeller = await Seller.findOne({ _id: sellerId });
+  if (!requiredSeller) {
+    return res.status(400).send({ message: "seller doesnot exist" });
+  }
+  return res
+    .status(200)
+    .send({ message: "success", sellerDetails: requiredSeller });
+});
+// delete seller vy id=====================
+router.delete("/delete/seller/:id", async (req, res) => {
+  const sellerId = req.params.id;
+  const isValidId = mongoose.isValidObjectId(sellerId);
+  if (!isValidId) {
+    return res.status(404).send({ message: "invalid mongoose id" });
+  }
+  const requiredSeller = await Seller.findOne({ _id: sellerId });
+  if (!requiredSeller) {
+    return res.status(400).send({ message: "seller doesnot exist" });
+  }
+  await Seller.deleteOne({ _id: sellerId });
+  return res.status(200).send({ message: "deleted sussfully" });
+});
+// edit product by id=====================
+router.put("/update/seller/:id", async (req, res) => {
+  const sellerId = req.params.id;
+  const isValidId = mongoose.isValidObjectId(sellerId);
+  if (!isValidId) {
+    return res.status(404).send({ message: "invalid mongoose id" });
+  }
+  const requiredSeller = await Seller.findOne({ _id: sellerId });
+  if (!requiredSeller) {
+    return res.status(400).send({ message: "seller doesnot exist" });
+  }
+  const newValue = req.body;
+  await Seller.updateOne(
+    { _id: sellerId },
+    {
+      $set: {
+        firstName: newValue.firstName,
+        lastName: newValue.lastName,
+        email: newValue.email,
+        contactNumber: newValue.contactNumber,
+        dob: newValue.dob,
+      },
+    }
+  );
+  return res.status(200).send({ message: "updated successfully" });
+});
 export default router;
